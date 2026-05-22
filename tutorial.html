@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mais Performance — Como Usar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#f97316;--orange2:#ea580c;--og:rgba(249,115,22,0.2);
+  --bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--bg4:#475569;
+  --text:#f1f5f9;--muted:#94a3b8;--border:rgba(255,255,255,0.08);
+  --green:#22c55e;--yellow:#eab308;--red:#ef4444;--blue:#60a5fa;--purple:#a78bfa;
+  --gold:#fbbf24;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+.deck{width:100vw;height:100vh;position:relative}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;padding:48px 64px;
+  opacity:0;pointer-events:none;transition:opacity .45s ease,transform .45s ease;
+  transform:translateX(50px);
+}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0)}
+.slide.prev{transform:translateX(-50px)}
+.slide::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 15% 15%,rgba(249,115,22,.05) 0%,transparent 55%),
+             radial-gradient(ellipse at 85% 85%,rgba(99,102,241,.04) 0%,transparent 55%);
+}
+
+/* NAV */
+.nav{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:14px;z-index:100;
+  background:rgba(30,41,59,.95);backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:100px;padding:10px 20px;
+}
+.nav button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;padding:4px 8px;border-radius:8px;transition:all .2s}
+.nav button:hover{color:var(--text);background:rgba(255,255,255,.08)}
+.dots{display:flex;gap:5px;align-items:center}
+.dot{width:5px;height:5px;border-radius:100px;background:var(--bg3);transition:all .3s;cursor:pointer}
+.dot.active{width:18px;background:var(--orange)}
+.slide-count{font-size:12px;color:var(--muted);min-width:44px;text-align:center}
+
+/* PROGRESS BAR */
+.progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--orange),var(--gold));transition:width .4s ease;z-index:200}
+
+/* STEP BADGE */
+.step-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);
+  border-radius:100px;padding:5px 14px;font-size:12px;font-weight:700;
+  color:var(--orange);letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px;
+}
+
+/* TITLES */
+.s-title{font-size:clamp(26px,3.5vw,44px);font-weight:900;letter-spacing:-1px;margin-bottom:6px;line-height:1.1}
+.s-title span{color:var(--orange)}
+.s-sub{font-size:15px;color:var(--muted);margin-bottom:32px;line-height:1.6}
+
+/* LAYOUT HELPERS */
+.row{display:flex;gap:32px;align-items:flex-start;width:100%;max-width:1100px}
+.col{flex:1;display:flex;flex-direction:column;gap:16px}
+
+/* MOCKUP SHELL */
+.mockup{
+  background:#0a0f1e;border:1px solid rgba(255,255,255,.12);border-radius:16px;
+  overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);
+}
+.mock-bar{
+  display:flex;align-items:center;gap:6px;padding:10px 14px;
+  background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);
+}
+.mock-dot{width:8px;height:8px;border-radius:50%}
+.mock-url{flex:1;background:rgba(255,255,255,.06);border-radius:6px;padding:3px 10px;font-size:10px;color:var(--muted);margin:0 8px}
+
+/* HEADER MOCK */
+.mock-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02);
+}
+.mock-logo{display:flex;align-items:center;gap:8px}
+.mock-logo .icon{width:28px;height:28px;border-radius:8px;background:rgba(249,115,22,.2);display:flex;align-items:center;justify-content:center;font-size:14px}
+.mock-logo .name{font-size:11px;font-weight:900;color:var(--text)}
+.mock-logo .quote{font-size:9px;color:var(--muted);font-style:italic}
+.mock-nav-btns{display:flex;gap:6px}
+.mock-btn{padding:4px 10px;border-radius:6px;font-size:9px;font-weight:700;border:1px solid var(--border);color:var(--muted)}
+.mock-btn.primary{background:rgba(249,115,22,.15);border-color:rgba(249,115,22,.3);color:var(--orange)}
+
+/* FILTER BAR */
+.mock-filter{display:flex;align-items:center;gap:8px;padding:10px 16px}
+.mock-period{display:flex;border-radius:7px;overflow:hidden;border:1px solid var(--border)}
+.mock-period span{padding:4px 10px;font-size:9px;font-weight:700;color:var(--muted)}
+.mock-period span.active{background:var(--orange);color:#fff}
+.mock-select{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:4px 10px;font-size:9px;color:var(--muted)}
+
+/* STAT CARDS */
+.mock-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:0 16px 12px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;gap:6px;align-items:flex-start}
+.stat-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.stat-label{font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.stat-value{font-size:12px;font-weight:900;color:var(--text);margin-top:1px}
+.stat-sub{font-size:7px;color:var(--muted);margin-top:1px}
+
+/* PODIUM */
+.mock-podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:16px}
+.pod-card{display:flex;flex-direction:column;align-items:center;gap:4px}
+.pod-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;position:relative}
+.pod-name{font-size:8px;font-weight:700;color:var(--text)}
+.pod-score{font-size:8px;font-weight:900;padding:2px 7px;border-radius:100px}
+.pod-base{border-radius:6px 6px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px}
+.pod-pos{font-size:14px;font-weight:900}
+
+/* RANKING ROWS */
+.mock-ranking{display:flex;flex-direction:column;gap:4px;padding:0 16px 16px}
+.rank-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;border:1px solid var(--border)}
+.rank-pos{font-size:12px;width:18px;text-align:center}
+.rank-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0}
+.rank-name{flex:1;font-size:10px;font-weight:700}
+.rank-unit{font-size:8px;color:var(--muted)}
+.rank-stats{display:flex;gap:10px;font-size:8px;color:var(--muted)}
+.rank-score{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:900}
+
+/* ANNOTATIONS */
+.anno-wrap{position:relative;flex:1}
+.anno{
+  position:absolute;display:flex;align-items:flex-start;gap:8px;
+  max-width:200px;
+}
+.anno-line{
+  width:2px;background:var(--orange);border-radius:2px;flex-shrink:0;
+  position:relative;margin-top:4px;
+}
+.anno-line::before{content:'';position:absolute;top:-3px;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--orange)}
+.anno-text{}
+.anno-text h4{font-size:12px;font-weight:800;color:var(--orange);margin-bottom:2px}
+.anno-text p{font-size:11px;color:var(--muted);line-height:1.5}
+
+/* EXPLAIN CARDS */
+.explain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:980px}
+.exp-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:8px}
+.exp-card .icon-wrap{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.exp-card h3{font-size:14px;font-weight:800}
+.exp-card p{font-size:12px;color:var(--muted);line-height:1.65}
+.exp-card .example{background:rgba(255,255,255,.04);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--text);margin-top:4px;border-left:2px solid var(--orange)}
+
+/* COLOR SYSTEM */
+.color-cards{display:flex;gap:16px;width:100%;max-width:900px}
+.color-card{flex:1;border-radius:20px;padding:28px;border:1px solid;display:flex;flex-direction:column;gap:10px}
+.color-card.green{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3)}
+.color-card.yellow{background:rgba(234,179,8,.08);border-color:rgba(234,179,8,.3)}
+.color-card.red{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3)}
+.color-card .dot-big{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff}
+.color-card.green .dot-big{background:var(--green)}
+.color-card.yellow .dot-big{background:var(--yellow)}
+.color-card.red .dot-big{background:var(--red)}
+.color-card h3{font-size:20px;font-weight:900}
+.color-card.green h3{color:var(--green)}
+.color-card.yellow h3{color:var(--yellow)}
+.color-card.red h3{color:var(--red)}
+.color-card p{font-size:13px;color:var(--muted);line-height:1.65}
+.color-card .tag{display:inline-block;padding:4px 12px;border-radius:100px;font-size:12px;font-weight:700;margin-top:4px}
+.color-card.green .tag{background:rgba(34,197,94,.15);color:var(--green)}
+.color-card.yellow .tag{background:rgba(234,179,8,.15);color:var(--yellow)}
+.color-card.red .tag{background:rgba(239,68,68,.15);color:var(--red)}
+
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:12px;max-width:480px;width:100%}
+.step-row{display:flex;align-items:flex-start;gap:14px}
+.step-num{width:32px;height:32px;border-radius:10px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:var(--orange);flex-shrink:0}
+.step-row h4{font-size:14px;font-weight:700;margin-bottom:3px}
+.step-row p{font-size:12px;color:var(--muted);line-height:1.55}
+
+/* FORM MOCK */
+.form-mock{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;width:100%}
+.form-section-title{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.form-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.form-row.cols3{grid-template-columns:repeat(3,1fr)}
+.form-field{display:flex;flex-direction:column;gap:4px}
+.form-field label{font-size:9px;font-weight:600;color:var(--muted)}
+.form-field .inp{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:10px;color:var(--text)}
+.form-field .inp.filled{border-color:rgba(249,115,22,.4);color:var(--text)}
+.form-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:4px;border-top:1px solid var(--border)}
+.form-actions .btn-cancel{padding:6px 14px;border-radius:7px;font-size:10px;font-weight:700;background:transparent;border:1px solid var(--border);color:var(--muted)}
+.form-actions .btn-save{padding:6px 14px;border-radius:7px;font-size:10px;font-weight:700;background:var(--orange);color:#fff;border:none}
+
+/* ALERT MOCK */
+.alert-strip{display:flex;gap:6px;padding:8px 16px;flex-wrap:wrap}
+.alert-pill{padding:4px 10px;border-radius:100px;font-size:9px;font-weight:700;border:1px solid}
+.alert-pill.green{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:var(--green)}
+.alert-pill.yellow{background:rgba(234,179,8,.1);border-color:rgba(234,179,8,.3);color:var(--yellow)}
+.alert-pill.orange{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.3);color:var(--orange)}
+
+/* TV MOCK */
+.tv-outer{background:#000;border:4px solid var(--bg3);border-radius:18px;overflow:hidden;box-shadow:0 0 60px rgba(0,0,0,.8),0 0 30px rgba(249,115,22,.08)}
+.tv-inner-bg{background:#080d1a;padding:14px}
+.tv-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tv-brand{font-size:11px;font-weight:900;color:var(--orange)}
+.tv-clock{font-size:22px;font-weight:900;color:#fff}
+.tv-row-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;margin-bottom:5px}
+.tv-row-item.gold{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25)}
+.tv-row-item.silver{background:rgba(203,213,225,.06);border:1px solid rgba(203,213,225,.15)}
+.tv-row-item.bronze{background:rgba(180,83,9,.08);border:1px solid rgba(180,83,9,.25)}
+.tv-row-item.plain{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)}
+.tv-ticker-bar{background:rgba(249,115,22,.1);padding:5px 12px;font-size:9px;color:var(--orange);font-weight:600}
+
+/* CAPA */
+.capa-title{font-size:clamp(36px,5vw,62px);font-weight:900;letter-spacing:-2px;text-align:center;line-height:1.1;background:linear-gradient(135deg,#fff 0%,var(--orange) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.capa-sub{font-size:16px;color:var(--muted);text-align:center;margin-top:12px;max-width:520px}
+.index-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:900px;width:100%;margin-top:32px}
+.idx-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.idx-num{font-size:10px;font-weight:900;color:var(--orange)}
+.idx-card h4{font-size:12px;font-weight:700}
+.idx-card p{font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="deck" id="deck">
+
+<!-- ═══ SLIDE 1: CAPA ═══ -->
+<div class="slide active" data-slide="0">
+  <div style="width:64px;height:64px;border-radius:20px;background:rgba(249,115,22,.15);border:2px solid rgba(249,115,22,.4);display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:24px;box-shadow:0 0 50px rgba(249,115,22,.25)">🏆</div>
+  <h1 class="capa-title">Como usar o<br/>Mais Performance</h1>
+  <p class="capa-sub">Guia completo do sistema — do login ao ranking na TV</p>
+  <div class="index-grid">
+    <div class="idx-card"><div class="idx-num">01 – 02</div><h4>Login & Dashboard</h4><p>Como acessar e navegar pela tela principal</p></div>
+    <div class="idx-card"><div class="idx-num">03 – 05</div><h4>Indicadores</h4><p>O que significa cada número e cor na tela</p></div>
+    <div class="idx-card"><div class="idx-num">06 – 08</div><h4>Pódio & Ranking</h4><p>Como funciona a pontuação e o score</p></div>
+    <div class="idx-card"><div class="idx-num">09 – 12</div><h4>Admin & TV</h4><p>Cadastrar colaboradores, metas e modo TV</p></div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 2: LOGIN ═══ -->
+<div class="slide" data-slide="1">
+  <div class="step-badge">📍 Passo 1 — Acesso</div>
+  <h2 class="s-title">Tela de <span>Login</span></h2>
+  <p class="s-sub">O sistema é protegido. Somente o administrador consegue acessar.</p>
+  <div class="row" style="align-items:center;gap:48px;max-width:960px">
+    <div class="mockup" style="flex:1;max-width:360px">
+      <div class="mock-bar"><div class="mock-dot" style="background:#ef4444"></div><div class="mock-dot" style="background:#eab308"></div><div class="mock-dot" style="background:#22c55e"></div><div class="mock-url">localhost:5173/login</div></div>
+      <div style="padding:40px 32px;display:flex;flex-direction:column;align-items:center;gap:20px">
+        <div style="width:56px;height:56px;border-radius:16px;background:rgba(249,115,22,.15);border:2px solid rgba(249,115,22,.35);display:flex;align-items:center;justify-content:center;font-size:26px">🏆</div>
+        <div style="text-align:center"><p style="font-size:16px;font-weight:900">Mais Performance</p><p style="font-size:11px;color:var(--muted);margin-top:3px">Ranking de Colaboradores</p></div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:11px;color:var(--muted)">E-mail</label><div style="background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:11px;color:var(--muted)">admin@empresa.com</div></div>
+          <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:11px;color:var(--muted)">Senha</label><div style="background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:11px;color:var(--muted)">••••••••</div></div>
+          <div style="background:var(--orange);border-radius:8px;padding:10px;text-align:center;font-size:12px;font-weight:700;color:#fff;margin-top:4px">→ Entrar</div>
+        </div>
+        <p style="font-size:10px;color:var(--muted)">Acesso restrito a administradores</p>
+      </div>
+    </div>
+    <div class="col" style="flex:1;gap:20px">
+      <div class="step-row"><div class="step-num">1</div><div><h4>Acesse o link do sistema</h4><p>Abra o navegador e cole o endereço do sistema fornecido pelo desenvolvedor.</p></div></div>
+      <div class="step-row"><div class="step-num">2</div><div><h4>Digite seu e-mail e senha</h4><p>Use as credenciais de administrador criadas durante a configuração do Firebase.</p></div></div>
+      <div class="step-row"><div class="step-num">3</div><div><h4>Clique em "Entrar"</h4><p>Você será redirecionado direto para o Dashboard com o ranking.</p></div></div>
+      <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);border-radius:12px;padding:14px 16px">
+        <p style="font-size:12px;color:var(--muted)"><span style="color:var(--orange);font-weight:700">⚠️ Importante:</span> Não compartilhe sua senha. O acesso ao admin dá permissão total para editar e excluir todos os dados do sistema.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 3: DASHBOARD VISÃO GERAL ═══ -->
+<div class="slide" data-slide="2">
+  <div class="step-badge">📍 Tela Principal</div>
+  <h2 class="s-title">Dashboard — <span>Visão Geral</span></h2>
+  <p class="s-sub">Tudo que você precisa saber sobre a performance da equipe em uma única tela.</p>
+  <div style="width:100%;max-width:1050px;position:relative">
+    <div class="mockup">
+      <div class="mock-bar"><div class="mock-dot" style="background:#ef4444"></div><div class="mock-dot" style="background:#eab308"></div><div class="mock-dot" style="background:#22c55e"></div><div class="mock-url">localhost:5173/</div></div>
+      <!-- Header -->
+      <div class="mock-header">
+        <div class="mock-logo"><div class="icon">🏆</div><div><div class="name">MAIS PERFORMANCE</div><div class="quote">"Resultado não é sorte. É disciplina, constância e foco."</div></div></div>
+        <div class="mock-nav-btns"><span class="mock-btn">⛶ TV</span><span class="mock-btn primary">⚙ Admin</span><span class="mock-btn">Sair</span></div>
+      </div>
+      <!-- Filters -->
+      <div class="mock-filter">
+        <div class="mock-period"><span>Hoje</span><span>Esta Semana</span><span class="active">Este Mês</span></div>
+        <div class="mock-select">▾ Todas as unidades</div>
+      </div>
+      <!-- Alerts -->
+      <div class="alert-strip">
+        <div class="alert-pill green">🎯 Ana Carolina bateu a meta de Unidade Centro!</div>
+        <div class="alert-pill yellow">⚠️ João Pedro com 35% de cancelamentos</div>
+        <div class="alert-pill orange">⚡ Liderança: Ana Carolina com 92.4 pts</div>
+      </div>
+      <!-- Stats -->
+      <div class="mock-stats">
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(34,197,94,.15)">💰</div><div><div class="stat-label">Total Vendido</div><div class="stat-value" style="font-size:9px">R$48.200</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(249,115,22,.15)">🎯</div><div><div class="stat-label">Meta Total</div><div class="stat-value" style="font-size:9px">R$50.000</div><div class="stat-sub">96.4% atingido</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(234,179,8,.15)">📈</div><div><div class="stat-label">% da Meta</div><div class="stat-value">96.4%</div><div class="stat-sub" style="color:var(--yellow)">Faltam R$1.800</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(167,139,250,.15)">📊</div><div><div class="stat-label">Ticket Médio</div><div class="stat-value" style="font-size:9px">R$320</div><div class="stat-sub">150 atend.</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,.15)">❌</div><div><div class="stat-label">Cancelamentos</div><div class="stat-value">12.0%</div><div class="stat-sub">18 total</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(96,165,250,.15)">👥</div><div><div class="stat-label">Colaboradores</div><div class="stat-value">5</div><div class="stat-sub">no período</div></div></div>
+      </div>
+      <!-- Ranking preview -->
+      <div class="mock-ranking">
+        <div class="rank-row" style="background:rgba(251,191,36,.07);border-color:rgba(251,191,36,.25)">
+          <span class="rank-pos">🥇</span><div class="rank-av" style="background:linear-gradient(135deg,#f97316,#c2410c)">AN</div>
+          <div style="flex:1"><div class="rank-name">Ana Carolina</div><div class="rank-unit">Unidade Centro</div></div>
+          <div class="rank-stats"><span>R$14.200</span><span>48 agend.</span><span style="color:var(--red)">8%</span></div>
+          <div class="rank-score" style="background:rgba(34,197,94,.15);color:var(--green)">92.4</div>
+        </div>
+        <div class="rank-row" style="background:rgba(203,213,225,.04)">
+          <span class="rank-pos">🥈</span><div class="rank-av" style="background:linear-gradient(135deg,#6366f1,#4338ca)">RF</div>
+          <div style="flex:1"><div class="rank-name">Rafael Souza</div><div class="rank-unit">Unidade Norte</div></div>
+          <div class="rank-stats"><span>R$11.800</span><span>39 agend.</span><span style="color:var(--yellow)">14%</span></div>
+          <div class="rank-score" style="background:rgba(34,197,94,.15);color:var(--green)">78.1</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Annotations -->
+    <div style="position:absolute;top:52px;right:-220px;max-width:200px">
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <div style="width:40px;height:2px;background:var(--orange);margin-top:6px;flex-shrink:0"></div>
+        <div><p style="font-size:11px;font-weight:800;color:var(--orange)">Botão TV</p><p style="font-size:10px;color:var(--muted)">Abre o modo tela cheia para projetar na televisão</p></div>
+      </div>
+    </div>
+    <div style="position:absolute;top:95px;right:-220px;max-width:200px">
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <div style="width:40px;height:2px;background:var(--orange);margin-top:6px;flex-shrink:0"></div>
+        <div><p style="font-size:11px;font-weight:800;color:var(--orange)">Filtros</p><p style="font-size:10px;color:var(--muted)">Filtre por período e por unidade da empresa</p></div>
+      </div>
+    </div>
+    <div style="position:absolute;top:132px;right:-220px;max-width:200px">
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <div style="width:40px;height:2px;background:var(--orange);margin-top:6px;flex-shrink:0"></div>
+        <div><p style="font-size:11px;font-weight:800;color:var(--orange)">Alertas automáticos</p><p style="font-size:10px;color:var(--muted)">Avisos de meta batida, queda e liderança</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 4: INDICADORES ═══ -->
+<div class="slide" data-slide="3">
+  <div class="step-badge">📍 Indicadores</div>
+  <h2 class="s-title">O que significa cada <span>número</span>?</h2>
+  <p class="s-sub">Os 6 cards no topo mostram um resumo geral de toda a equipe no período selecionado.</p>
+  <div class="explain-grid">
+    <div class="exp-card">
+      <div class="icon-wrap" style="background:rgba(34,197,94,.15)">💰</div>
+      <h3 style="color:var(--green)">Total Vendido</h3>
+      <p>Soma de tudo que todos os colaboradores venderam no período. É o número mais importante — mostra a receita gerada pela equipe.</p>
+      <div class="example">Ex: R$ 48.200 vendidos no mês de abril por toda a equipe somada.</div>
+    </div>
+    <div class="exp-card">
+      <div class="icon-wrap" style="background:rgba(249,115,22,.15)">🎯</div>
+      <h3 style="color:var(--orange)">Meta Total</h3>
+      <p>Soma das metas de todas as unidades cadastradas. Você define esse valor no painel Admin, na aba "Metas / Unidades".</p>
+      <div class="example">Ex: Se a Unidade Centro tem meta R$30.000 e a Norte R$20.000 → Meta Total = R$50.000.</div>
+    </div>
+    <div class="exp-card">
+      <div class="icon-wrap" style="background:rgba(234,179,8,.15)">📈</div>
+      <h3 style="color:var(--yellow)">% da Meta</h3>
+      <p>Percentual do quanto a equipe já atingiu da meta total. Quando chega a 100%, o sistema mostra "🎉 Meta batida!".</p>
+      <div class="example">Ex: Vendeu R$48.200 de R$50.000 → <strong style="color:var(--yellow)">96.4% da meta</strong>. Faltam R$1.800.</div>
+    </div>
+    <div class="exp-card">
+      <div class="icon-wrap" style="background:rgba(167,139,250,.15)">📊</div>
+      <h3 style="color:var(--purple)">Ticket Médio</h3>
+      <p>Valor médio de cada atendimento realizado. Calculado dividindo o total vendido pelo número de agendamentos.</p>
+      <div class="example">Ex: R$48.200 ÷ 150 atendimentos = <strong style="color:var(--purple)">Ticket médio de R$321</strong>.</div>
+    </div>
+    <div class="exp-card">
+      <div class="icon-wrap" style="background:rgba(239,68,68,.15)">❌</div>
+      <h3 style="color:var(--red)">Cancelamentos</h3>
+      <p>Taxa percentual de cancelamentos sobre o total de atendimentos. Quanto menor, melhor. Acima de 20% é considerado alto.</p>
+      <div class="example">Ex: 18 cancelamentos de 150 agendamentos = <strong style="color:var(--red)">12% de cancelamento</strong>.</div>
+    </div>
+    <div class="exp-card">
+      <div class="icon-wrap" style="background:rgba(96,165,250,.15)">👥</div>
+      <h3 style="color:var(--blue)">Colaboradores</h3>
+      <p>Quantos colaboradores estão ativos no período e unidade selecionados. Muda automaticamente quando você usa os filtros.</p>
+      <div class="example">Ex: Filtrou por "Unidade Norte" → mostra só os colaboradores dessa filial.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 5: SISTEMA DE CORES ═══ -->
+<div class="slide" data-slide="4">
+  <div class="step-badge">📍 Sistema de Cores</div>
+  <h2 class="s-title">O que significam as <span>cores</span>?</h2>
+  <p class="s-sub">As cores indicam o nível de performance de cada colaborador de forma visual e imediata.</p>
+  <div class="color-cards">
+    <div class="color-card green">
+      <div class="dot-big">70+</div>
+      <h3>Verde — Alto Desempenho</h3>
+      <p>Colaborador com score acima de 70 pontos. Está com boas vendas, poucos cancelamentos e boa avaliação. É o nível que todos devem almejar.</p>
+      <span class="tag">Score ≥ 70 pontos</span>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">🏆 Geralmente ocupa o Top 3 do ranking</div>
+    </div>
+    <div class="color-card yellow">
+      <div class="dot-big">40+</div>
+      <h3>Amarelo — Desempenho Médio</h3>
+      <p>Score entre 40 e 70 pontos. O colaborador tem performance razoável, mas há espaço para melhoria em vendas, agendamentos ou avaliação.</p>
+      <span class="tag">Score entre 40 e 69 pontos</span>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">⚠️ Atenção e acompanhamento recomendados</div>
+    </div>
+    <div class="color-card red">
+      <div class="dot-big">&lt;40</div>
+      <h3>Vermelho — Baixo Desempenho</h3>
+      <p>Score abaixo de 40 pontos. Indica problemas sérios em uma ou mais métricas — pode ser muitos cancelamentos, vendas baixas ou avaliação ruim.</p>
+      <span class="tag">Score abaixo de 40 pontos</span>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">🚨 Requer ação imediata do gestor</div>
+    </div>
+  </div>
+  <div style="margin-top:24px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 24px;max-width:900px;width:100%">
+    <p style="font-size:13px;color:var(--muted);text-align:center">As cores aparecem no <strong style="color:var(--text)">score de cada colaborador</strong> no ranking e também nos cards do pódio — tornando a leitura instantânea mesmo de longe (ideal para TV).</p>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 6: ALERTAS ═══ -->
+<div class="slide" data-slide="5">
+  <div class="step-badge">📍 Alertas Automáticos</div>
+  <h2 class="s-title">Alertas <span>inteligentes</span></h2>
+  <p class="s-sub">O sistema detecta situações importantes e exibe avisos coloridos automaticamente — sem você precisar calcular nada.</p>
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:860px;width:100%">
+    <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25);border-radius:16px;padding:20px 24px;display:flex;align-items:flex-start;gap:16px">
+      <div style="font-size:28px">🎯</div>
+      <div>
+        <p style="font-size:15px;font-weight:800;color:var(--green)">Meta batida</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.6">Aparece quando um colaborador ultrapassa a meta de vendas da unidade dele. Ex: <em style="color:var(--text)">"🎯 Ana Carolina bateu a meta de Unidade Centro!"</em></p>
+      </div>
+    </div>
+    <div style="background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.25);border-radius:16px;padding:20px 24px;display:flex;align-items:flex-start;gap:16px">
+      <div style="font-size:28px">⚠️</div>
+      <div>
+        <p style="font-size:15px;font-weight:800;color:var(--yellow)">Alto índice de cancelamentos</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.6">Aparece quando um colaborador tem mais de 30% de cancelamentos sobre os atendimentos. Ex: <em style="color:var(--text)">"⚠️ João Pedro com 35% de cancelamentos"</em></p>
+      </div>
+    </div>
+    <div style="background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.25);border-radius:16px;padding:20px 24px;display:flex;align-items:flex-start;gap:16px">
+      <div style="font-size:28px">⚡</div>
+      <div>
+        <p style="font-size:15px;font-weight:800;color:var(--orange)">Liderança do ranking</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.6">Sempre exibe quem está na liderança e com quantos pontos. Ex: <em style="color:var(--text)">"⚡ Liderança: Ana Carolina com 92.4 pts"</em></p>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:16px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;max-width:860px;width:100%">
+    <p style="font-size:12px;color:var(--muted)">💡 <strong style="color:var(--text)">Os alertas são automáticos.</strong> Você não precisa configurar nada — o sistema detecta e exibe assim que os dados são atualizados.</p>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 7: PÓDIO ═══ -->
+<div class="slide" data-slide="6">
+  <div class="step-badge">📍 Pódio</div>
+  <h2 class="s-title">Pódio — <span>Top 3</span></h2>
+  <p class="s-sub">Os 3 melhores colaboradores do período ganham destaque especial com animação e medalhas.</p>
+  <div class="row" style="align-items:center;gap:48px;max-width:960px">
+    <div class="mockup" style="flex:1;max-width:400px">
+      <div class="mock-bar"><div class="mock-dot" style="background:#ef4444"></div><div class="mock-dot" style="background:#eab308"></div><div class="mock-dot" style="background:#22c55e"></div><div class="mock-url">— Pódio —</div></div>
+      <div class="mock-podium">
+        <!-- 2nd -->
+        <div class="pod-card">
+          <div class="pod-avatar" style="background:linear-gradient(135deg,#6366f1,#4338ca);width:44px;height:44px;font-size:13px">RF<span style="position:absolute;bottom:-2px;right:-2px;font-size:16px">🥈</span></div>
+          <div class="pod-name">Rafael Souza</div>
+          <div style="font-size:7px;color:var(--muted)">Unidade Norte</div>
+          <div class="pod-score" style="background:rgba(34,197,94,.15);color:var(--green)">78.1 pts</div>
+          <div class="pod-base" style="width:90px;height:80px;background:linear-gradient(to top,rgba(203,213,225,.15),transparent)"><span class="pod-pos" style="color:var(--silver)">2º</span></div>
+        </div>
+        <!-- 1st -->
+        <div class="pod-card">
+          <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:2px">⭐ Melhor da semana</div>
+          <div class="pod-avatar" style="background:linear-gradient(135deg,#f97316,#c2410c);width:52px;height:52px;font-size:15px;box-shadow:0 0 20px rgba(249,115,22,.4)">AN<span style="position:absolute;bottom:-2px;right:-2px;font-size:18px">🥇</span></div>
+          <div class="pod-name" style="font-size:9px">Ana Carolina</div>
+          <div style="font-size:7px;color:var(--muted)">Unidade Centro</div>
+          <div class="pod-score" style="background:rgba(34,197,94,.15);color:var(--green);font-size:9px">92.4 pts</div>
+          <div class="pod-base" style="width:90px;height:110px;background:linear-gradient(to top,rgba(251,191,36,.2),transparent)"><span class="pod-pos" style="color:var(--gold);font-size:18px">1º</span></div>
+        </div>
+        <!-- 3rd -->
+        <div class="pod-card">
+          <div class="pod-avatar" style="background:linear-gradient(135deg,#22c55e,#15803d);width:44px;height:44px;font-size:13px">MF<span style="position:absolute;bottom:-2px;right:-2px;font-size:16px">🥉</span></div>
+          <div class="pod-name">Maria F.</div>
+          <div style="font-size:7px;color:var(--muted)">Unidade Sul</div>
+          <div class="pod-score" style="background:rgba(234,179,8,.15);color:var(--yellow)">61.7 pts</div>
+          <div class="pod-base" style="width:90px;height:60px;background:linear-gradient(to top,rgba(180,83,9,.15),transparent)"><span class="pod-pos" style="color:var(--bronze);font-size:14px">3º</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col" style="flex:1;gap:14px">
+      <div style="display:flex;gap:12px;align-items:flex-start"><span style="font-size:22px">🥇</span><div><h4 style="font-size:14px;font-weight:800;color:var(--gold)">1º lugar — Ouro</h4><p style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:2px">Maior destaque. Fica na posição central e mais alta do pódio. Exibe também o selo "⭐ Melhor da semana".</p></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start"><span style="font-size:22px">🥈</span><div><h4 style="font-size:14px;font-weight:800;color:var(--silver)">2º lugar — Prata</h4><p style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:2px">Fica à esquerda do 1º. Destaque com borda e brilho prateado.</p></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start"><span style="font-size:22px">🥉</span><div><h4 style="font-size:14px;font-weight:800;color:#b45309">3º lugar — Bronze</h4><p style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:2px">Fica à direita do 1º. Destaque com borda e brilho bronzeado.</p></div></div>
+      <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:12px 14px;margin-top:4px">
+        <p style="font-size:12px;color:var(--muted)">🔄 <strong style="color:var(--text)">O pódio se atualiza automaticamente.</strong> Quando um colaborador muda de posição, a animação acontece em tempo real — sem precisar recarregar a página.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 8: RANKING & SCORE ═══ -->
+<div class="slide" data-slide="7">
+  <div class="step-badge">📍 Ranking Completo</div>
+  <h2 class="s-title">Ranking & <span>Score</span></h2>
+  <p class="s-sub">Abaixo do pódio fica a lista completa. Veja o que significa cada informação de cada colaborador.</p>
+  <div style="width:100%;max-width:1000px;position:relative">
+    <div class="mockup">
+      <div class="mock-bar"><div class="mock-dot" style="background:#ef4444"></div><div class="mock-dot" style="background:#eab308"></div><div class="mock-dot" style="background:#22c55e"></div><div class="mock-url">— Ranking Completo —</div></div>
+      <div class="mock-ranking" style="padding:12px 16px">
+        <div class="rank-row" style="background:rgba(251,191,36,.07);border-color:rgba(251,191,36,.25);position:relative" id="rr1">
+          <span class="rank-pos">🥇</span>
+          <div class="rank-av" style="background:linear-gradient(135deg,#f97316,#c2410c)">AN</div>
+          <div style="flex:1"><div class="rank-name">Ana Carolina ⭐</div><div class="rank-unit">Unidade Centro</div></div>
+          <div class="rank-stats">
+            <span>R$14.200</span>
+            <span>48 agend.</span>
+            <span style="color:var(--green)">8%</span>
+          </div>
+          <div class="rank-score" style="background:rgba(34,197,94,.15);color:var(--green)">92.4</div>
+        </div>
+        <div class="rank-row">
+          <span class="rank-pos">🥈</span><div class="rank-av" style="background:linear-gradient(135deg,#6366f1,#4338ca)">RF</div>
+          <div style="flex:1"><div class="rank-name">Rafael Souza</div><div class="rank-unit">Unidade Norte</div></div>
+          <div class="rank-stats"><span>R$11.800</span><span>39 agend.</span><span style="color:var(--yellow)">14%</span></div>
+          <div class="rank-score" style="background:rgba(34,197,94,.15);color:var(--green)">78.1</div>
+        </div>
+        <div class="rank-row">
+          <span class="rank-pos">4</span><div class="rank-av" style="background:linear-gradient(135deg,#f59e0b,#b45309)">JP</div>
+          <div style="flex:1"><div class="rank-name">João Pedro</div><div class="rank-unit">Unidade Norte</div></div>
+          <div class="rank-stats"><span>R$4.100</span><span>22 agend.</span><span style="color:var(--red)">35%</span></div>
+          <div class="rank-score" style="background:rgba(239,68,68,.15);color:var(--red)">34.2</div>
+        </div>
+      </div>
+    </div>
+    <!-- annotations -->
+    <div style="position:absolute;top:55px;left:-230px;display:flex;gap:8px;align-items:center">
+      <div><p style="font-size:11px;font-weight:800;color:var(--orange);text-align:right">Posição</p><p style="font-size:10px;color:var(--muted);text-align:right">Lugar no ranking<br/>ordenado pelo score</p></div>
+      <div style="width:30px;height:2px;background:var(--orange)"></div>
+    </div>
+    <div style="position:absolute;top:55px;right:-230px;display:flex;gap:8px;align-items:center">
+      <div style="width:30px;height:2px;background:var(--orange)"></div>
+      <div><p style="font-size:11px;font-weight:800;color:var(--orange)">Score Final</p><p style="font-size:10px;color:var(--muted)">Pontuação calculada<br/>automaticamente (0–100)</p></div>
+    </div>
+    <div style="position:absolute;top:92px;right:-230px;display:flex;gap:8px;align-items:center">
+      <div style="width:30px;height:2px;background:var(--orange)"></div>
+      <div><p style="font-size:11px;font-weight:800;color:var(--orange)">Indicadores</p><p style="font-size:10px;color:var(--muted)">Vendas · Agendamentos<br/>· % de Cancelamento</p></div>
+    </div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;max-width:1000px;width:100%;margin-top:14px">
+    <p style="font-size:12px;color:var(--muted)">📐 <strong style="color:var(--text)">Fórmula do Score:</strong> <span style="color:var(--green)">50% Vendas</span> + <span style="color:var(--blue)">20% Agendamentos</span> − <span style="color:var(--red)">10% Cancelamentos</span> + <span style="color:var(--purple)">20% Avaliação</span> (prova + presença + comportamento)</p>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 9: FILTROS ═══ -->
+<div class="slide" data-slide="8">
+  <div class="step-badge">📍 Filtros</div>
+  <h2 class="s-title">Como usar os <span>Filtros</span></h2>
+  <p class="s-sub">Os filtros permitem analisar a performance por período e por unidade separadamente.</p>
+  <div class="row" style="align-items:flex-start;gap:40px;max-width:960px">
+    <div style="flex:1;display:flex;flex-direction:column;gap:16px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px">
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:16px">⏱ Filtro por Período</h3>
+        <div style="display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--border);width:fit-content;margin-bottom:16px">
+          <span style="padding:8px 18px;font-size:12px;font-weight:700;color:var(--muted)">Hoje</span>
+          <span style="padding:8px 18px;font-size:12px;font-weight:700;color:var(--muted)">Esta Semana</span>
+          <span style="padding:8px 18px;font-size:12px;font-weight:700;background:var(--orange);color:#fff">Este Mês</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--orange);font-weight:700;font-size:13px;min-width:90px">Hoje</span><p style="font-size:12px;color:var(--muted);line-height:1.5">Mostra apenas dados inseridos no dia atual. Ideal para acompanhamento diário.</p></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--orange);font-weight:700;font-size:13px;min-width:90px">Esta Semana</span><p style="font-size:12px;color:var(--muted);line-height:1.5">Dados dos últimos 7 dias. Bom para acompanhamento semanal da equipe.</p></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--orange);font-weight:700;font-size:13px;min-width:90px">Este Mês</span><p style="font-size:12px;color:var(--muted);line-height:1.5">Padrão. Mostra todos os dados do mês atual. Ideal para metas mensais.</p></div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:16px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px">
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:16px">🏢 Filtro por Unidade</h3>
+        <div style="background:var(--bg3);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--text);display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;width:fit-content;min-width:200px">Unidade Centro ▾</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--blue);font-weight:700;font-size:13px;min-width:130px">Todas as unidades</span><p style="font-size:12px;color:var(--muted);line-height:1.5">Padrão. Exibe todos os colaboradores de todas as filiais juntos.</p></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--blue);font-weight:700;font-size:13px;min-width:130px">Unidade específica</span><p style="font-size:12px;color:var(--muted);line-height:1.5">Filtra apenas os colaboradores daquela filial. A meta exibida também muda para a da unidade selecionada.</p></div>
+        </div>
+      </div>
+      <div style="background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:14px 16px">
+        <p style="font-size:12px;color:var(--muted)">💡 Você pode combinar os dois filtros. Ex: ver apenas os resultados da <strong style="color:var(--text)">Unidade Norte</strong> na <strong style="color:var(--text)">última semana</strong>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 10: PAINEL ADMIN ═══ -->
+<div class="slide" data-slide="9">
+  <div class="step-badge">📍 Painel Admin</div>
+  <h2 class="s-title">Painel de <span>Administração</span></h2>
+  <p class="s-sub">Clique no botão "Admin" no canto superior direito do Dashboard para acessar.</p>
+  <div style="width:100%;max-width:1000px">
+    <div class="mockup">
+      <div class="mock-bar"><div class="mock-dot" style="background:#ef4444"></div><div class="mock-dot" style="background:#eab308"></div><div class="mock-dot" style="background:#22c55e"></div><div class="mock-url">localhost:5173/admin</div></div>
+      <div class="mock-header">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;color:var(--muted)">← Ranking</span><span style="font-size:10px;color:var(--border)">|</span><span style="font-size:11px;font-weight:700">Painel Admin</span></div>
+        <div class="mock-btn primary" style="font-size:9px">+ Novo colaborador</div>
+      </div>
+      <!-- Tabs -->
+      <div style="display:flex;gap:4px;padding:12px 16px">
+        <div style="background:var(--orange);color:#fff;border-radius:8px;padding:7px 16px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:5px">👥 Colaboradores</div>
+        <div style="background:rgba(255,255,255,.06);color:var(--muted);border-radius:8px;padding:7px 16px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:5px">🎯 Metas / Unidades</div>
+      </div>
+      <!-- Table -->
+      <div style="padding:0 16px 16px">
+        <table style="width:100%;border-collapse:collapse;font-size:10px">
+          <thead><tr style="border-bottom:1px solid var(--border);color:var(--muted);text-align:left">
+            <th style="padding-bottom:8px">Colaborador</th><th>Unidade</th><th>Vendas</th><th>Agend.</th><th>Cancel.</th><th>Score</th><th>Ações</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+              <td style="padding:8px 0;display:flex;align-items:center;gap:6px"><div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#f97316,#c2410c);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff">AN</div>Ana Carolina</td>
+              <td style="color:var(--muted);padding:8px 0">Unidade Centro</td><td style="padding:8px 0">R$14.200</td><td style="padding:8px 0">48</td><td style="padding:8px 0">4</td>
+              <td style="padding:8px 0"><span style="background:rgba(34,197,94,.15);color:var(--green);padding:2px 8px;border-radius:100px;font-weight:700">92.4</span></td>
+              <td style="padding:8px 0"><span style="color:var(--muted)">✏️ 🗑️</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+              <td style="padding:8px 0;display:flex;align-items:center;gap:6px"><div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4338ca);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff">RF</div>Rafael Souza</td>
+              <td style="color:var(--muted);padding:8px 0">Unidade Norte</td><td style="padding:8px 0">R$11.800</td><td style="padding:8px 0">39</td><td style="padding:8px 0">6</td>
+              <td style="padding:8px 0"><span style="background:rgba(34,197,94,.15);color:var(--green);padding:2px 8px;border-radius:100px;font-weight:700">78.1</span></td>
+              <td style="padding:8px 0"><span style="color:var(--muted)">✏️ 🗑️</span></td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;display:flex;align-items:center;gap:6px"><div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#b45309);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff">JP</div>João Pedro</td>
+              <td style="color:var(--muted);padding:8px 0">Unidade Norte</td><td style="padding:8px 0">R$4.100</td><td style="padding:8px 0">22</td><td style="padding:8px 0">8</td>
+              <td style="padding:8px 0"><span style="background:rgba(239,68,68,.15);color:var(--red);padding:2px 8px;border-radius:100px;font-weight:700">34.2</span></td>
+              <td style="padding:8px 0"><span style="color:var(--muted)">✏️ 🗑️</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:12px;margin-top:14px;max-width:1000px;width:100%">
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start">
+      <span style="font-size:18px">✏️</span><div><p style="font-size:13px;font-weight:700">Editar</p><p style="font-size:11px;color:var(--muted)">Abre o formulário com os dados preenchidos para atualizar qualquer informação do colaborador.</p></div>
+    </div>
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start">
+      <span style="font-size:18px">🗑️</span><div><p style="font-size:13px;font-weight:700">Excluir</p><p style="font-size:11px;color:var(--muted)">Remove o colaborador do sistema. Pede confirmação antes de excluir para evitar erros.</p></div>
+    </div>
+    <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start">
+      <span style="font-size:18px">➕</span><div><p style="font-size:13px;font-weight:700">Novo colaborador</p><p style="font-size:11px;color:var(--muted)">Botão no canto superior direito. Abre o formulário em branco para cadastrar um novo membro.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 11: ADICIONAR COLABORADOR ═══ -->
+<div class="slide" data-slide="10">
+  <div class="step-badge">📍 Cadastro</div>
+  <h2 class="s-title">Como <span>adicionar</span> um colaborador</h2>
+  <p class="s-sub">Clique em "+ Novo colaborador" no Admin. Preencha o formulário e clique em "Adicionar colaborador".</p>
+  <div class="row" style="align-items:flex-start;gap:32px;max-width:1000px">
+    <div style="flex:1.2">
+      <div class="form-mock">
+        <div class="form-row">
+          <div class="form-field"><label>Nome *</label><div class="inp filled">Ana Carolina Silva</div></div>
+          <div class="form-field"><label>Foto (URL)</label><div class="inp">https://foto.com/ana.jpg</div></div>
+        </div>
+        <div class="form-field"><label>Unidade *</label><div class="inp filled">▾ Unidade Centro</div></div>
+        <div class="form-section-title">Performance</div>
+        <div class="form-row cols3">
+          <div class="form-field"><label>Valor Vendido (R$)</label><div class="inp filled">14200</div></div>
+          <div class="form-field"><label>Agendamentos</label><div class="inp filled">48</div></div>
+          <div class="form-field"><label>Cancelamentos</label><div class="inp filled">4</div></div>
+        </div>
+        <div class="form-section-title">Avaliação Final (0–10)</div>
+        <div class="form-row cols3">
+          <div class="form-field"><label>Nota da Prova</label><div class="inp filled">8.5</div></div>
+          <div class="form-field"><label>Assiduidade / Presença</label><div class="inp filled">9.0</div></div>
+          <div class="form-field"><label>Comportamento</label><div class="inp filled">9.5</div></div>
+        </div>
+        <div class="form-actions"><div class="btn-cancel">Cancelar</div><div class="btn-save">Adicionar colaborador</div></div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px">
+        <p style="font-size:12px;font-weight:800;color:var(--orange)">📋 O que preencher:</p>
+        <div style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:8px;line-height:1.6">
+          <p><strong style="color:var(--text)">Nome:</strong> Nome completo do colaborador</p>
+          <p><strong style="color:var(--text)">Foto (URL):</strong> Link de uma imagem. Pode deixar em branco — aparecerá as iniciais no lugar</p>
+          <p><strong style="color:var(--text)">Unidade:</strong> Em qual filial o colaborador trabalha</p>
+          <p><strong style="color:var(--text)">Valor Vendido:</strong> Total em R$ vendido no período</p>
+          <p><strong style="color:var(--text)">Agendamentos:</strong> Quantos atendimentos realizou</p>
+          <p><strong style="color:var(--text)">Cancelamentos:</strong> Quantos atendimentos foram cancelados</p>
+          <p><strong style="color:var(--text)">Nota da Prova:</strong> Nota de 0 a 10 na avaliação técnica</p>
+          <p><strong style="color:var(--text)">Assiduidade:</strong> Nota de 0 a 10 para presença/pontualidade</p>
+          <p><strong style="color:var(--text)">Comportamento:</strong> Nota de 0 a 10 para postura e atitude</p>
+        </div>
+      </div>
+      <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:12px 14px">
+        <p style="font-size:11px;color:var(--muted)">✅ O score é calculado <strong style="color:var(--text)">automaticamente</strong> ao salvar. O colaborador já aparece no ranking na ordem correta.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 12: METAS E UNIDADES ═══ -->
+<div class="slide" data-slide="11">
+  <div class="step-badge">📍 Metas & Unidades</div>
+  <h2 class="s-title">Como cadastrar <span>Unidades</span> e <span>Metas</span></h2>
+  <p class="s-sub">No Admin, clique na aba "Metas / Unidades". Faça isso antes de adicionar colaboradores.</p>
+  <div class="row" style="align-items:flex-start;gap:32px;max-width:1000px">
+    <div style="flex:1">
+      <div class="form-mock">
+        <p style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:10px">Nova Unidade</p>
+        <div style="display:flex;gap:8px">
+          <div class="inp filled" style="flex:1;padding:8px 12px">Unidade Centro</div>
+          <div style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:10px;font-weight:700;white-space:nowrap">+ Adicionar</div>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <p style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:10px">Metas por Unidade</p>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+              <span style="font-size:12px">🎯</span>
+              <div style="flex:1"><p style="font-size:10px;font-weight:700">Unidade Centro</p><p style="font-size:8px;color:var(--muted)">Meta atual: R$ 30.000</p></div>
+              <div class="inp" style="width:100px;padding:5px 8px;font-size:9px">R$ meta</div>
+              <div style="background:var(--orange);border-radius:6px;padding:5px 10px;font-size:9px;font-weight:700;color:#fff">Salvar</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+              <span style="font-size:12px">🎯</span>
+              <div style="flex:1"><p style="font-size:10px;font-weight:700">Unidade Norte</p><p style="font-size:8px;color:var(--muted)">Meta atual: R$ 20.000</p></div>
+              <div class="inp" style="width:100px;padding:5px 8px;font-size:9px">R$ meta</div>
+              <div style="background:var(--orange);border-radius:6px;padding:5px 10px;font-size:9px;font-weight:700;color:#fff">Salvar</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px">
+        <h3 style="font-size:14px;font-weight:800;margin-bottom:12px">📋 Passo a passo:</h3>
+        <div class="steps">
+          <div class="step-row"><div class="step-num">1</div><div><h4>Criar a unidade</h4><p>Digite o nome da filial (ex: "Unidade Centro") e clique em "+ Adicionar"</p></div></div>
+          <div class="step-row"><div class="step-num">2</div><div><h4>Repetir para cada filial</h4><p>Adicione todas as suas unidades antes de cadastrar os colaboradores</p></div></div>
+          <div class="step-row"><div class="step-num">3</div><div><h4>Definir a meta</h4><p>No campo ao lado da unidade, digite o valor em R$ da meta e clique em "Salvar"</p></div></div>
+          <div class="step-row"><div class="step-num">4</div><div><h4>Atualizar quando necessário</h4><p>Para mudar a meta no próximo mês, basta digitar o novo valor e salvar novamente</p></div></div>
+        </div>
+      </div>
+      <div style="background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:12px 14px">
+        <p style="font-size:11px;color:var(--muted)">💡 A meta influencia diretamente no score de vendas dos colaboradores daquela unidade. <strong style="color:var(--text)">Quanto maior a meta, mais difícil chegar ao topo.</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 13: MODO TV ═══ -->
+<div class="slide" data-slide="12">
+  <div class="step-badge">📍 Modo TV</div>
+  <h2 class="s-title">Exibindo na <span>TV</span></h2>
+  <p class="s-sub">Clique no botão "TV" no Dashboard ou acesse diretamente o endereço <code style="background:var(--bg2);padding:2px 8px;border-radius:6px;font-size:13px">/tv</code> em qualquer navegador.</p>
+  <div class="row" style="align-items:center;gap:40px;max-width:1000px">
+    <div style="flex:1.3">
+      <div class="tv-outer">
+        <div class="tv-inner-bg">
+          <div class="tv-top"><span class="tv-brand">🏆 MAIS PERFORMANCE</span><span class="tv-clock">14:32</span></div>
+          <p style="font-size:8px;color:var(--muted);margin-bottom:10px;font-style:italic">"Resultado não é sorte. É disciplina, constância e foco."</p>
+          <div class="tv-row-item gold">
+            <span style="font-size:16px">🥇</span>
+            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f97316,#c2410c);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">AN</div>
+            <div style="flex:1"><p style="font-size:11px;font-weight:800;color:#fff">Ana Carolina</p><p style="font-size:8px;color:var(--muted)">Unidade Centro</p></div>
+            <div style="text-right"><p style="font-size:11px;font-weight:900;color:var(--green)">92.4 pts</p><p style="font-size:8px;color:var(--muted)">R$14.200</p></div>
+          </div>
+          <div class="tv-row-item silver">
+            <span style="font-size:16px">🥈</span>
+            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4338ca);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">RF</div>
+            <div style="flex:1"><p style="font-size:11px;font-weight:800;color:#fff">Rafael Souza</p><p style="font-size:8px;color:var(--muted)">Unidade Norte</p></div>
+            <div><p style="font-size:11px;font-weight:900;color:var(--green)">78.1 pts</p><p style="font-size:8px;color:var(--muted)">R$11.800</p></div>
+          </div>
+          <div class="tv-row-item bronze">
+            <span style="font-size:16px">🥉</span>
+            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#15803d);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">MF</div>
+            <div style="flex:1"><p style="font-size:11px;font-weight:800;color:#fff">Maria Fernanda</p><p style="font-size:8px;color:var(--muted)">Unidade Sul</p></div>
+            <div><p style="font-size:11px;font-weight:900;color:var(--yellow)">61.7 pts</p><p style="font-size:8px;color:var(--muted)">R$9.800</p></div>
+          </div>
+          <div class="tv-row-item plain">
+            <span style="font-size:13px;color:var(--muted);width:18px;text-align:center">4</span>
+            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#b45309);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">JP</div>
+            <div style="flex:1"><p style="font-size:11px;font-weight:800;color:#fff">João Pedro</p><p style="font-size:8px;color:var(--muted)">Unidade Norte</p></div>
+            <div><p style="font-size:11px;font-weight:900;color:var(--red)">34.2 pts</p><p style="font-size:8px;color:var(--muted)">R$4.100</p></div>
+          </div>
+        </div>
+        <div class="tv-ticker-bar">⚡ Ana Carolina — 92.4 pts &nbsp;|&nbsp; Rafael Souza — 78.1 pts &nbsp;|&nbsp; Maria Fernanda — 61.7 pts &nbsp;|&nbsp; João Pedro — 34.2 pts &nbsp;|&nbsp;</div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:32px;height:32px;border-radius:10px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📺</div><div><h4 style="font-size:14px;font-weight:700;margin-bottom:3px">Fullscreen automático</h4><p style="font-size:12px;color:var(--muted);line-height:1.5">Ao acessar /tv, a tela entra em modo fullscreen sozinha. Ideal para ligar e deixar rodando.</p></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:32px;height:32px;border-radius:10px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🔄</div><div><h4 style="font-size:14px;font-weight:700;margin-bottom:3px">Atualização em tempo real</h4><p style="font-size:12px;color:var(--muted);line-height:1.5">Quando o admin atualiza um dado, a TV muda automaticamente — sem precisar recarregar.</p></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:32px;height:32px;border-radius:10px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📄</div><div><h4 style="font-size:14px;font-weight:700;margin-bottom:3px">Paginação automática</h4><p style="font-size:12px;color:var(--muted);line-height:1.5">Se houver mais de 5 colaboradores, a tela alterna automaticamente a cada 8 segundos.</p></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:32px;height:32px;border-radius:10px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">⚡</div><div><h4 style="font-size:14px;font-weight:700;margin-bottom:3px">Ticker inferior</h4><p style="font-size:12px;color:var(--muted);line-height:1.5">Todos os nomes e pontuações ficam rolando na parte de baixo da tela em loop contínuo.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 14: RESUMO ═══ -->
+<div class="slide" data-slide="13">
+  <div class="step-badge">✅ Resumo Final</div>
+  <h2 class="s-title">Tudo pronto para <span>começar</span></h2>
+  <p class="s-sub">Siga essa ordem na primeira vez que for usar o sistema:</p>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1000px;width:100%;margin-bottom:24px">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center">
+      <div style="width:44px;height:44px;border-radius:14px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:20px">🔐</div>
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900">1</div>
+      <h4 style="font-size:13px;font-weight:800">Acessar</h4>
+      <p style="font-size:11px;color:var(--muted);line-height:1.5">Entre no sistema com e-mail e senha de admin</p>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center">
+      <div style="width:44px;height:44px;border-radius:14px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:20px">🏢</div>
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900">2</div>
+      <h4 style="font-size:13px;font-weight:800">Criar Unidades</h4>
+      <p style="font-size:11px;color:var(--muted);line-height:1.5">Admin → Metas/Unidades → Adicione cada filial</p>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center">
+      <div style="width:44px;height:44px;border-radius:14px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:20px">👥</div>
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900">3</div>
+      <h4 style="font-size:13px;font-weight:800">Cadastrar Equipe</h4>
+      <p style="font-size:11px;color:var(--muted);line-height:1.5">Admin → Colaboradores → Novo colaborador</p>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center">
+      <div style="width:44px;height:44px;border-radius:14px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:20px">📺</div>
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900">4</div>
+      <h4 style="font-size:13px;font-weight:800">Ligar a TV</h4>
+      <p style="font-size:11px;color:var(--muted);line-height:1.5">Acesse /tv e projete o ranking para a equipe</p>
+    </div>
+  </div>
+  <div style="background:linear-gradient(135deg,rgba(249,115,22,.1),rgba(249,115,22,.05));border:1px solid rgba(249,115,22,.25);border-radius:16px;padding:20px 28px;max-width:1000px;width:100%;text-align:center">
+    <p style="font-size:15px;color:var(--muted);font-style:italic">"Quando a equipe vê o ranking na TV, a competição começa naturalmente — e os resultados aparecem."</p>
+    <p style="font-size:13px;color:var(--orange);font-weight:700;margin-top:10px">🏆 Mais Performance — Ranking de Colaboradores em Tempo Real</p>
+  </div>
+</div>
+
+</div><!-- end deck -->
+
+<div class="nav">
+  <button onclick="navigate(-1)">←</button>
+  <div class="dots" id="dots"></div>
+  <span class="slide-count" id="count"></span>
+  <button onclick="navigate(1)">→</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const dotsEl = document.getElementById('dots');
+const countEl = document.getElementById('count');
+const progressEl = document.getElementById('progress');
+let current = 0;
+
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+});
+
+function updateProgress() {
+  progressEl.style.width = ((current + 1) / slides.length * 100) + '%';
+}
+
+function goTo(n) {
+  slides[current].classList.remove('active');
+  slides[current].classList.add('prev');
+  setTimeout(() => slides[current].classList.remove('prev'), 500);
+  current = (n + slides.length) % slides.length;
+  slides[current].classList.add('active');
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  countEl.textContent = `${current + 1} / ${slides.length}`;
+  updateProgress();
+}
+
+function navigate(dir) { goTo(current + dir); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') navigate(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp') navigate(-1);
+});
+
+countEl.textContent = `1 / ${slides.length}`;
+updateProgress();
+</script>
+</body>
+</html>
